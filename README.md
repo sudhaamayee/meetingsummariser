@@ -1,0 +1,41 @@
+# AI-Based Meeting Transcription and Summarization Tool
+
+A minimal full-stack app to upload meeting audio and get:
+- Transcript with speaker tags
+- Concise summary: overview, decisions, action items
+
+Stack
+- Frontend: React (Vite) + TailwindCSS
+- Backend: FastAPI (Python)
+- DB: MongoDB Atlas (Motor)
+- AI Pipeline: Whisper (transcription), Pyannote (speaker diarization), HuggingFace (summarization)
+
+Quick Start
+
+Backend
+1. Copy `backend/.env.example` to `backend/.env` and fill values.
+2. (Optional) Keep `USE_STUB=1` to run without heavy models.
+3. Create a venv and install deps:
+   - `python -m venv .venv && .venv/Scripts/activate` (Windows)
+   - `pip install -r backend/requirements.txt`
+4. Run API:
+   - `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --app-dir backend`
+
+Frontend
+1. From `frontend/`:
+   - `npm install`
+   - `npm run dev`
+2. Set `VITE_API_BASE` in `frontend/.env` (default: http://localhost:8000)
+
+Deployment
+- Frontend: Netlify/Vercel
+- Backend: Render/Railway
+- DB: MongoDB Atlas
+
+Environment Variables
+- Backend: see `backend/.env.example`
+- Frontend: see `frontend/.env.example`
+
+Notes
+- Stub mode returns deterministic fake outputs suitable for development.
+- Replace stub by setting `USE_STUB=0` and installing optional heavy packages (see comments in `backend/requirements.txt`).
