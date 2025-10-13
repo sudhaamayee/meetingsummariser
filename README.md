@@ -39,3 +39,47 @@ Environment Variables
 Notes
 - Stub mode returns deterministic fake outputs suitable for development.
 - Replace stub by setting `USE_STUB=0` and installing optional heavy packages (see comments in `backend/requirements.txt`).
+
+## Troubleshooting
+
+### Getting Static/Stub Data After Upload
+
+If you're still getting static data after uploading a video, check the following:
+
+1. **Check USE_STUB setting in backend/.env**
+   ```bash
+   # In backend/.env, set:
+   USE_STUB=0
+   ```
+
+2. **Install AI dependencies** (required when USE_STUB=0)
+   ```bash
+   # Activate your virtual environment first
+   .venv\Scripts\activate  # Windows
+   
+   # Install the heavy AI dependencies
+   pip install torch openai-whisper transformers sentencepiece
+   ```
+
+3. **Restart the backend server**
+   ```bash
+   # Stop the current server (Ctrl+C) and restart:
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --app-dir backend
+   ```
+
+4. **Check the logs** - The server will now show detailed logs:
+   - "USE_STUB mode: False" on startup
+   - "Loading Whisper model..." during processing
+   - "Transcription completed: X characters"
+
+### If You Want to Keep Using Stub Mode
+
+If you prefer to use stub mode for testing (no AI dependencies needed):
+1. Set `USE_STUB=1` in `backend/.env`
+2. The system will return consistent test data for all uploads
+
+### Performance Notes
+
+- First upload with real AI will be slow (downloading models ~1-2GB)
+- Subsequent uploads will be faster (models cached)
+- Processing time depends on audio length (~1-2 min per 10 min of audio)

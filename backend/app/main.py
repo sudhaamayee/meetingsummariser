@@ -8,12 +8,23 @@ from bson import ObjectId
 from .db import get_db
 from .models import Meeting, MeetingCreate
 from .ai import transcribe, diarize_transcript, summarize
-from .config import UPLOAD_DIR
+from .config import UPLOAD_DIR, USE_STUB
 import logging
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Meeting AI API")
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info(f"Starting Meeting AI API")
+    logger.info(f"USE_STUB mode: {USE_STUB}")
+    logger.info(f"Upload directory: {UPLOAD_DIR}")
 
 # Dev CORS
 app.add_middleware(
@@ -29,15 +40,26 @@ async def upload(file: UploadFile = File(...)):
     if not file.filename.lower().endswith((".mp3", ".wav", ".mp4")):
         raise HTTPException(status_code=400, detail="Unsupported file format")
 
+    logger.info(f"Received upload request for file: {file.filename}")
+    
     try:
         # Save temp file
         dest_path = os.path.join(UPLOAD_DIR, file.filename)
+        logger.info(f"Saving file to: {dest_path}")
         with open(dest_path, "wb") as out:
             shutil.copyfileobj(file.file, out)
+        
+        file_size = os.path.getsize(dest_path)
+        logger.info(f"File saved successfully ({file_size} bytes)")
 
         # AI pipeline
+        logger.info("Starting transcription...")
         raw_transcript = transcribe(dest_path)
+        
+        logger.info("Starting diarization...")
         tagged_transcript, speakers = diarize_transcript(raw_transcript)
+        
+        logger.info("Starting summarization...")
         summary = summarize(tagged_transcript)
 
         doc = MeetingCreate(
@@ -53,6 +75,7 @@ async def upload(file: UploadFile = File(...)):
             res = await db.meetings.insert_one(doc)
             saved = await db.meetings.find_one({"_id": res.inserted_id})
             saved["_id"] = str(saved["_id"])  # serialize
+            logger.info(f"Meeting saved to database with ID: {saved['_id']}")
             return saved
         except Exception as db_error:
             logger.warning(f"MongoDB save failed: {db_error}. Returning result without persistence.")
@@ -61,7 +84,7 @@ async def upload(file: UploadFile = File(...)):
             doc["createdAt"] = datetime.utcnow().isoformat()
             return doc
     except Exception as e:
-        logger.error(f"Upload processing failed: {e}")
+        logger.error(f"Upload processing failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 @app.get("/summary/{id}")

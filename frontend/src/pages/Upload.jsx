@@ -14,11 +14,14 @@ export default function Upload() {
     if (!file) { setError('Please select an audio file (.mp3, .wav, .mp4)'); return }
     setLoading(true)
     try {
+      console.log('Uploading file:', file.name)
       const data = await uploadFile(file)
+      console.log('Upload successful:', data)
       navigate(`/results/${data._id}`)
     } catch (err) {
-      console.error(err)
-      setError('Upload failed')
+      console.error('Upload error:', err)
+      const errorMsg = err.response?.data?.detail || err.message || 'Upload failed. Check if backend is running on port 8000.'
+      setError(errorMsg)
     } finally {
       setLoading(false)
     }
