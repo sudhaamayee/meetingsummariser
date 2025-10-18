@@ -13,13 +13,41 @@ Stack
 Quick Start
 
 Backend
-1. Copy `backend/.env.example` to `backend/.env` and fill values.
-2. (Optional) Keep `USE_STUB=1` to run without heavy models.
-3. Create a venv and install deps:
-   - `python -m venv .venv && .venv/Scripts/activate` (Windows)
-   - `pip install -r backend/requirements.txt`
-4. Run API:
-   - `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --app-dir backend`
+1. **Navigate to backend directory:**
+   ```bash
+   cd backend
+   ```
+
+2. **Set up environment variables:**
+   - Copy `backend/.env.example` to `backend/.env` and fill values
+   - (Optional) Keep `USE_STUB=1` to run without heavy AI models
+
+3. **Create virtual environment and install dependencies:**
+   ```bash
+   # Create virtual environment
+   python -m venv .venv
+   
+   # Activate virtual environment (Windows)
+   .venv\Scripts\activate
+   
+   # Install dependencies
+   pip install -r requirements.txt
+   ```
+
+4. **Run the backend server:**
+   ```bash
+   # From the backend directory
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+   
+   Or from the project root:
+   ```bash
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --app-dir backend
+   ```
+
+5. **Verify the server is running:**
+   - Open http://localhost:8000/docs in your browser
+   - You should see the FastAPI interactive documentation
 
 Frontend
 1. From `frontend/`:
