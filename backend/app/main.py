@@ -67,43 +67,68 @@ async def upload(file: UploadFile = File(...)):
         logger.info("Starting summarization...")
         summary = summarize(tagged_transcript)
 
+        # Generate a temporary ID for immediate response
+        temp_id = "temp_" + str(abs(hash(file.filename + str(datetime.utcnow()))))[:12]
+        
+        # Prepare the document with temporary ID
         doc = MeetingCreate(
             filename=file.filename,
             transcript=tagged_transcript,
             speakers=speakers,
             summary=summary,
+            temp_id=temp_id,  # Store the temp_id for later lookup
+            createdAt=datetime.utcnow(),
+            status="processing"
         ).model_dump()
 
         # Try to save to MongoDB
         db = await get_db()
         try:
             res = await db.meetings.insert_one(doc)
-            saved = await db.meetings.find_one({"_id": res.inserted_id})
-            saved["_id"] = str(saved["_id"])  # serialize
-            logger.info(f"Meeting saved to database with ID: {saved['_id']}")
-            return saved
-        except Exception as db_error:
-            logger.warning(f"MongoDB save failed: {db_error}. Returning result without persistence.")
-            # Return result without saving to DB
-            doc["_id"] = "temp_" + str(abs(hash(file.filename + str(datetime.utcnow()))))[:12]
-            doc["createdAt"] = datetime.utcnow().isoformat()
+            doc["_id"] = str(res.inserted_id)  # Add string ID for response
+            doc["temp_id"] = temp_id  # Ensure temp_id is included in the response
+            logger.info(f"Successfully saved to database with ID: {doc['_id']}")
             return doc
+        except Exception as e:
+            logger.warning(f"Failed to save to database: {e}")
+            # Return result with temp_id even if DB save fails
+            return {
+                "_id": temp_id,
+                "temp_id": temp_id,
+                "filename": file.filename,
+                "transcript": tagged_transcript,
+                "speakers": speakers,
+                "summary": summary,
+                "createdAt": datetime.utcnow().isoformat(),
+                "status": "temporary"
+            }
     except Exception as e:
         logger.error(f"Upload processing failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 @app.get("/summary/{id}")
 async def get_summary(id: str):
-    try:
-        oid = ObjectId(id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid id")
-
     db = await get_db()
-    doc = await db.meetings.find_one({"_id": oid})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Not found")
-    doc["_id"] = str(doc["_id"])  # serialize
+    
+    # First check if it's a temporary ID (starts with 'temp_')
+    if id.startswith('temp_'):
+        # Look for the document with this temp_id
+        doc = await db.meetings.find_one({"temp_id": id})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Temporary summary not found. The summary may have expired or already been processed.")
+    else:
+        # Handle MongoDB ObjectId
+        try:
+            oid = ObjectId(id)
+            doc = await db.meetings.find_one({"_id": oid})
+            if not doc:
+                raise HTTPException(status_code=404, detail="Summary not found")
+        except Exception as e:
+            logger.error(f"Error fetching summary: {str(e)}")
+            raise HTTPException(status_code=400, detail="Invalid ID format")
+    
+    # Convert ObjectId to string for JSON serialization
+    doc["_id"] = str(doc["_id"])
     return doc
 
 @app.get("/history")
