@@ -1,5 +1,7 @@
 # AI-Based Meeting Transcription and Summarization Tool
 
+![Project Logo](images/logo.png)
+
 A minimal full-stack app to upload meeting audio and get:
 - Transcript with speaker tags
 - Concise summary: overview, decisions, action items
