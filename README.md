@@ -1,26 +1,75 @@
-# AI-Based Meeting Transcription and Summarization Tool
+# AI-Powered Meeting Transcription & Summarization Tool
 
-![Project Logo](images/logo.png)
+A comprehensive full-stack application that transforms your meeting recordings into structured, searchable, and actionable content. Upload any meeting audio file and get instant, accurate transcripts with speaker identification and AI-generated summaries.
 
-A minimal full-stack app to upload meeting audio and get:
-- Transcript with speaker tags
-- Concise summary: overview, decisions, action items
+## 🚀 Key Features
 
-Stack
-- Frontend: React (Vite) + TailwindCSS
-- Backend: FastAPI (Python)
-- DB: MongoDB Atlas (Motor)
-- AI Pipeline: Whisper (transcription), Pyannote (speaker diarization), HuggingFace (summarization)
+- **Automated Transcription**: Convert speech to text with high accuracy using OpenAI's Whisper
+- **Speaker Diarization**: Automatically identify and tag different speakers in the conversation
+- **AI-Powered Summaries**: Get concise overviews, key decisions, and action items extracted by AI
+- **User-Friendly Interface**: Clean, responsive design built with React and TailwindCSS
+- **Secure & Scalable**: Built with FastAPI and MongoDB Atlas for reliable performance
 
-Quick Start
+## 🛠️ Tech Stack
 
-Backend
-1. **Navigate to backend directory:**
+### Frontend
+- **Framework**: React 18 with Vite
+- **Styling**: TailwindCSS + HeadlessUI
+- **State Management**: React Context API
+- **HTTP Client**: Axios
+
+### Backend
+- **Framework**: FastAPI (Python 3.9+)
+- **Database**: MongoDB Atlas (with Motor async driver)
+- **Authentication**: JWT (JSON Web Tokens)
+- **API Documentation**: Swagger UI & ReDoc
+
+### AI/ML Components
+- **Speech-to-Text**: OpenAI's Whisper
+- **Speaker Diarization**: Pyannote.audio
+- **Text Summarization**: HuggingFace Transformers
+- **NLP Processing**: spaCy
+
+## 📸 Screenshots
+
+### 1. Upload Interface
+![Project OverView of Uploading](images/s1.png)
+*Easily upload your meeting recordings in various formats*
+
+### 2. Transcription View
+![Project Overview of Transcription](images/s2.png)
+*View and edit transcriptions with speaker identification*
+
+### 3. Summary Dashboard
+![Project Overview of Summarisation](images/s3.png)
+*Get AI-generated summaries and action items*
+
+## 🚀 Quick Start
+
+Follow these steps to get the application up and running on your local machine.
+
+### Prerequisites
+
+- Node.js 16+ and npm/yarn
+- Python 3.9+
+- MongoDB Atlas account (or local MongoDB instance)
+- FFmpeg (for audio processing)
+
+### Backend Setup
+
+1. **Navigate to the backend directory and set up a virtual environment:**
    ```bash
    cd backend
+   python -m venv venv
+   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
    ```
 
-2. **Set up environment variables:**
+2. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set up environment variables:**
    - Copy `backend/.env.example` to `backend/.env` and fill values
    - (Optional) Keep `USE_STUB=1` to run without heavy AI models
 
