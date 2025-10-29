@@ -26,19 +26,43 @@ async def startup_event():
     logger.info(f"USE_STUB mode: {USE_STUB}")
     logger.info(f"Upload directory: {UPLOAD_DIR}")
 
-# Dev CORS
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://meetingsummariserr.netlify.app",  # Production frontend
-        "http://localhost:5173",                   # Local development
-        "http://localhost:3000"                    # Common React dev server
+        "http://localhost:5173",                   # Vite dev server
+        "http://localhost:3000",                   # Common React dev server
+        "https://meetingsummariser-1.onrender.com"  # Render backend
     ],
+    allow_origin_regex=r'https?://(localhost|127\.0\.0\.1)(:\d+)?',  # Localhost with any port
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["Content-Disposition"]
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "*",
+        "Content-Type",
+        "Authorization",
+        "Access-Control-Allow-Credentials",
+        "Access-Control-Allow-Origin"
+    ],
+    expose_headers=["Content-Disposition", "Content-Length"],
+    max_age=600  # Cache preflight requests for 10 minutes
 )
+
+# Add OPTIONS handler for preflight requests
+@app.options("/{full_path:path}")
+async def preflight_handler(full_path: str) -> dict:
+    return {"status": "ok"}
+
+# Add CORS headers to all responses
+@app.middleware("http")
+async def add_cors_header(request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "https://meetingsummariserr.netlify.app"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
 
 @app.post("/upload")
 async def upload(file: UploadFile = File(...)):
